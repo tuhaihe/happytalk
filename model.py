@@ -42,10 +42,6 @@ class Model(object):
         if len(message) > 280:
             raise TalkException(u'你至于吐这么多吗')
         last_active_time = self.clientips.get(clientip)
-        if last_active_time and datetime.now() - last_active_time < timedelta(minutes=1):
-            raise TalkException(u"亲，你吐的太快了，让别人先吐会儿")
-        if len(self.threads) > max_thread:
-            raise TalkException(u'目前槽点均已吐满，请稍后再试')
         self.clientips[clientip] = datetime.now()
 
     @lockroot
@@ -85,52 +81,6 @@ def load_model():
         logging.info("load exists model:%s %s", model.max_thread, model.max_user)
         return model
 
-class CleanThread(threading.Thread):
-    def __init__(self):
-        super(CleanThread, self).__init__()
-        self.setDaemon(True)
-        self.name = 'Clean Thread'
-
-    @lockroot
-    def _clean_threads(self):
-        now = datetime.now()
-        remove_list = []
-        for thread in model.threads:
-            if now - thread.posttime > max_alive_time:
-                remove_list.append(thread)
-        for thread in remove_list:
-            logging.info("clean thread remove:%s %s", thread.id, thread.message)
-            model.threads.remove(thread)
-
-    @lockroot
-    def _clean_clientips(self):
-        now = datetime.now()
-        remove_list = []
-        for ip, last_active_time in model.clientips.items():
-            if now - last_active_time < timedelta(minutes=2):
-                remove_list.append(ip)
-        logging.info("clean thread remove clientip:%s", len(remove_list))
-        for ip in remove_list:
-            del model.clientips[ip]
-
-    def _sync_model(self):
-        u'每隔1小时同步下数据'
-        now = datetime.now()
-        if now.minute == 0:
-            save_model()
-
-    def run(self):
-        while True:
-            try:
-                logging.info("clean thread runing")
-                self._clean_threads()
-                self._clean_clientips()
-                self._sync_model()
-            except:
-                logging.exception("clean thread run error")
-            finally:
-                time.sleep(60)
-
 def load_minganci():
     logging.info("loading minganci")
     for line in open('./minganci.txt'):
@@ -146,16 +96,12 @@ def minganci_filter(message):
 
 model = None
 minganci_list = None
-clean_thread = None
 root_lock = threading.RLock()
 
 def init():
-    global model, minganci_list, clean_thread, root_lock
+    global model, minganci_list, root_lock
     model = load_model()
     minganci_list = list(load_minganci())
-
-    clean_thread = CleanThread()
-    clean_thread.start()
 
     signal.signal(signal.SIGTERM, save_model)
     signal.signal(signal.SIGINT, save_model)

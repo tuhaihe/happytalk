@@ -6,9 +6,6 @@ import model
 
 
 web.config.debug = False
-log_path = '/data/log/happy_talk.log'
-log_level = 'debug'
-
 
 class IndexHandler(object):
     def GET(self):
@@ -46,25 +43,6 @@ def internalerror():
     return web.internalerror(str(render._500(message)))
 
 
-def init_logger(logpath, level='info', console=False):
-    import logging.handlers
-
-    level = logging._levelNames.get(level, logging.INFO)
-
-    logger = logging.getLogger()
-    logger.propagate = False
-    logger.setLevel(level)
-
-    handler = logging.handlers.RotatingFileHandler(logpath, maxBytes=100 * 1000 * 1000, backupCount=10)
-    formatter = logging.Formatter('%(levelname)s %(asctime)s- [%(module)s.%(funcName)s](%(thread)d): %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    if console:
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(formatter)
-        logger.addHandler(consoleHandler)
-
 def timeinfo(time):
     diff = time + model.max_alive_time - datetime.now()
     if diff > timedelta(hours=1):
@@ -75,7 +53,6 @@ urls = ["/", IndexHandler,
         "/about", AboutHandler,
         ]
 
-init_logger(log_path, log_level, console=True)
 model.init()
 tpl_globals = {'timeinfo': timeinfo}
 render = web.template.render('templates', base='layout', cache=False, globals=tpl_globals)

@@ -3,6 +3,11 @@
 匿名微博，无需注册即可发言，主要用于吐槽，爆料，发泄，当然发征婚，广告，招聘
 啥的也可以啦。
 
+### 
+
+    pip install gunicorn
+
+
 ### 启动
 
 gunicorn talk_web:wsgiapp --log-file log.log -b localhost:8001 -D
@@ -31,3 +36,7 @@ done
 - done: 每个槽不能太长
 - done: 每个槽24小时后自动小时
 - done: 显示每个槽还剩多久销毁
+
+----
+
+Update: 2015.02.08
