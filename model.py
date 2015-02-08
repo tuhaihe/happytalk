@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import web
 
 model_db_path = '/data/happytalk.model.db'
-max_thread = 100
+max_thread = 100000000000000
 max_alive_time = timedelta(hours=24)
 
 class TalkException(Exception):
